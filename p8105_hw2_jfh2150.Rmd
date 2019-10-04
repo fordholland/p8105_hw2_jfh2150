@@ -3,38 +3,57 @@ title: "HW 2"
 output: github_document
 ---
 
-```{r setup, include = FALSE}
 
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE}
 
 library(tidyverse)
 library(readxl)
+library(viridis)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "90%"
+)
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 ```
+
 
 
 ## Problem 1
 
 ```{r}
 
-# read in Mr. Trash Wheel data excluding the header and note column 
+# read in Mr. Trash Wheel data excluding the header and note column
 df_trash_data = read_excel("Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
                            sheet = "Mr. Trash Wheel",
                            range = cell_cols("A:N"),
                            skip = 1)
 
 # clean names
-df_trash_data = df_trash_data %>% 
+df_trash_data = df_trash_data %>%
   janitor::clean_names()
 
 # drop summary rows
-df_trash_data = df_trash_data %>% 
+df_trash_data = df_trash_data %>%
   drop_na(dumpster)
 
-# round sports balls field
-df_trash_data = df_trash_data %>% 
+# round sports balls field and parse to numeric
+df_trash_data = df_trash_data %>%
   mutate(
-    sports_balls = round(sports_balls, 0) %>% 
+    sports_balls = round(sports_balls, 0) %>%
       as.integer()
   )
 
@@ -44,12 +63,12 @@ df_precipitation_17 = read_excel("Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx
                                  range = "A2:B14")
 
 # clean names
-df_precipitation_17 = df_precipitation_17 %>% 
+df_precipitation_17 = df_precipitation_17 %>%
   janitor::clean_names()
 
 # filter out missing values and add year feature
-df_precipitation_17 = df_precipitation_17 %>% 
-  drop_na(total) %>% 
+df_precipitation_17 = df_precipitation_17 %>%
+  drop_na(total) %>%
   mutate(year = 2017)
 
 
@@ -59,12 +78,12 @@ df_precipitation_18 = read_excel("Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx
                                  range = "A2:B14")
 
 # clean names
-df_precipitation_18 = df_precipitation_18 %>% 
+df_precipitation_18 = df_precipitation_18 %>%
   janitor::clean_names()
 
 # filter out missing values and add year feature
-df_precipitation_18 = df_precipitation_18 %>% 
-  drop_na(total) %>% 
+df_precipitation_18 = df_precipitation_18 %>%
+  drop_na(total) %>%
   mutate(year = 2018)
 
 
@@ -72,32 +91,36 @@ df_precipitation_18 = df_precipitation_18 %>%
 df_precipitation = rbind(df_precipitation_17, df_precipitation_18)
 
 # change month values to character names
-df_precipitation = df_precipitation %>% 
+df_precipitation = df_precipitation %>%
   mutate(
     month = month.name[month]
-  )
+  ) %>%
+  select(year, month, total_precipitation = total)
 
 ```
 
-Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. For available data, what was the total precipitation in 2018? What was the median number of sports balls in a dumpster in 2017?
+The `Mr. Trash Wheel` data comprise `r ncol(df_trash_data)` columns and `r nrow(df_trash_data)` observations. Key features of this dataset include `weight_tons` and `volume_cubic_yards`, the weight and volume, respectively, of trash collected per month. The number of homes powered by incinerating the collected trash, `homes_powered`, is also an interesting feature that demonstrates the impact that Mr. Trash Wheel has on the Baltimore community. These data also contain quantities of certain itemized trash objects, such as the number of sports balls collected. In 2017 for example, the median number of balls collected per month was `r df_trash_data %>% filter(year == 2017) %>% summarize(median = median(sports_balls))`.
+
+
+The precipitation data describe the total precipitation in Baltimore per month. There are `r nrow(df_precipitation)` observations, representing precipitation for all months in 2017 and 2018. Notably, the total precipitation in 2018 was `r df_precipitation %>% filter(year == 2018) %>% summarize(sum = sum(total_precipitation))` inches, more than twice the `r df_precipitation %>% filter(year == 2017) %>% summarize(sum = sum(total_precipitation))` inches received in 2017. In fact, 2017 precipitation only exceeded 2018 in 2 months.
+
+
+{Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. For available data, what was the total precipitation in 2018? What was the median number of sports balls in a dumpster in 2017?}
+
 
 ```{r}
+# TODO: remove
+df_precipitation %>%
+  group_by(year) %>%
+  summarise(mean(total_precipitation))
 
-df_precipitation %>% 
-  group_by(year) %>% 
-  filter(!(month %in% c("August", 
-                        "September", 
-                        "October", 
-                        "November", 
-                        "December"))) %>% 
-  summarise(mean(total))
+df_precipitation %>%
+  group_by(year) %>%
+  summarise(mean(total_precipitation))
 
-df_precipitation %>% 
-  group_by(year) %>% 
-  summarise(mean(total))
-
-df_precipitation %>% 
-  pivot_wider(names_from = year, values_from = total) %>% 
+# notably, precipitation in 2017 only exceeded 2018 values in 2 months
+df_precipitation %>%
+  pivot_wider(names_from = year, values_from = total_precipitation) %>%
   mutate(difference = `2018` - `2017`)
 
 
@@ -115,50 +138,50 @@ df_precipitation %>%
 # combine prez fields
 
 # TODO try with recode
-# load  and tidy pols data 
-df_pols_month = read_csv("Data/pols-month.csv") %>% 
-  separate(mon, into = c("year", "month", "day"), sep = "-", convert = TRUE) %>% 
-  arrange(year, month) %>% 
+# load  and tidy pols data
+df_pols_month = read_csv("Data/pols-month.csv") %>%
+  separate(mon, into = c("year", "month", "day"), sep = "-", convert = TRUE) %>%
+  arrange(year, month) %>%
   mutate(month = month.name[month],
          president = case_when(
            prez_dem == 1 ~ "dem",
            prez_gop %in% c(1, 2) ~ "gop"
          )
-  ) 
-  
+  )
+
 # check mapping of variables
 #   note: 5 values of 2 for prez_gop; assumed these meant 1
-df_pols_month %>% 
+df_pols_month %>%
   count(president, prez_dem, prez_gop)
 
 # drop prez and day fields
-df_pols_month = df_pols_month %>% 
+df_pols_month = df_pols_month %>%
   select(-c(prez_dem, prez_gop, day))
 
 
 # load and clean snp data
-df_snp = read_csv("Data/snp.csv") %>% 
-  separate(date, into = c("month", "day", "year"), sep = "/", convert = TRUE) %>% 
-  arrange(year, month) %>% 
-  mutate(month = month.name[month]) %>% 
+df_snp = read_csv("Data/snp.csv") %>%
+  separate(date, into = c("month", "day", "year"), sep = "/", convert = TRUE) %>%
+  arrange(year, month) %>%
+  mutate(month = month.name[month]) %>%
   select(year, month, close)
 
 
 # load and tidy unemployment data
-df_unemployment = read_csv("Data/unemployment.csv") %>% 
-  rename(year = Year) %>% 
-  pivot_longer(-year, names_to = "month", values_to = "unemployment_rate") %>% 
-  mutate(month = month.name[match(month, month.abb)]) 
+df_unemployment = read_csv("Data/unemployment.csv") %>%
+  rename(year = Year) %>%
+  pivot_longer(-year, names_to = "month", values_to = "unemployment_rate") %>%
+  mutate(month = month.name[match(month, month.abb)])
 
-  
+
 # join in s&p closing values
-df_pols_month = left_join(df_pols_month, df_snp, 
-                          by = c("year", "month")) 
+df_pols_month_joined = left_join(df_pols_month, df_snp,
+                                 by = c("year", "month"))
 
 # join in unemployment rates
-df_pols_month = left_join(df_pols_month, df_unemployment, 
-                          by = c("year", "month"))
-  
+df_pols_month_joined = left_join(df_pols_month_joined, df_unemployment,
+                                 by = c("year", "month"))
+
 
 
 ```
@@ -171,6 +194,19 @@ df_pols_month = left_join(df_pols_month, df_unemployment,
 {Join the datasets by merging snp into pols, and merging unemployment into the result.}
 
 Note start years of snp and unemp rate
+
+
+
+The `df_pols_month` dataset describes the political composition of the U.S. government at different points in time. There are values for the numbers of democrats and republicans in each of the houses of Congress and as governors, and indicators for the political affiliation of the president. There are `r nrow(df_pols_month)` per-month observations.
+
+`df_snp` contains `r nrow(df_snp)` observations on the closing values of the Standard & Poor’s stock market index by year and month.
+
+The `df_unemployment` dataset contains `r nrow(df_unemployment)` observations of the U.S unemployment rate by year and month.
+
+When joined together, these datasets relate the political party composition of the U.S. government to the S&P index and unemployment rate, which are often used as recession indicators. The joined dataset comprises `r ncol(df_pols_month_joined)` features and `r nrow(df_pols_month_joined)` rows representing years `r df_pols_month_joined %>% summarize(min = min(year))` to `r df_pols_month_joined %>% summarize(max = max(year))`. The key values of `close` for the S&P index and `unemployment_rate` only have data starting in `r df_pols_month_joined %>% filter(!is.na(close)) %>% summarize(min = min(year))` and `r df_pols_month_joined %>% filter(!is.na(unemployment_rate)) %>% summarize(min = min(year))`, respectively.
+
+
+
 
 Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
 
@@ -190,95 +226,77 @@ Finally, for male, white non-hispanic children born in 2016, produce a scatter p
 ```{r}
 
 # data checks
-# df_baby_names %>% 
+# df_baby_names %>%
 #   count(ethnicity)
-# 
-# temp <- df_baby_names %>% 
-#   count(childs_first_name) %>% 
-#   mutate(childs_first_name = tolower(childs_first_name)) %>% 
+#
+# temp  <-  df_baby_names %>%
+#   count(childs_first_name) %>%
+#   mutate(childs_first_name = tolower(childs_first_name)) %>%
 #   distinct()
 
 
 
 
 # read and clean name data
-df_baby_names = read_csv("Data/Popular_Baby_Names.csv") %>% 
-  janitor::clean_names() %>% 
-  arrange(year_of_birth) %>% 
+df_baby_names = read_csv("Data/Popular_Baby_Names.csv") %>%
+  janitor::clean_names() %>%
+  arrange(year_of_birth) %>%
   mutate(childs_first_name = str_to_lower(childs_first_name),
-         ethnicity = ethnicity %>% 
+         ethnicity = ethnicity %>%
            recode("ASIAN AND PACI" = "ASIAN AND PACIFIC ISLANDER",
                   "BLACK NON HISP" = "BLACK NON HISPANIC",
-                  "WHITE NON HISP" = "WHITE NON HISPANIC") %>% 
-           tolower()) %>% 
+                  "WHITE NON HISP" = "WHITE NON HISPANIC") %>%
+           tolower()) %>%
   distinct()
 
 # check ethnicity
-df_baby_names %>% 
+df_baby_names %>%
   count(ethnicity)
 
 # check names: one name repeated from different capitalizations
-df_baby_names %>% 
-  select(-c(count, rank)) %>% 
+df_baby_names %>%
+  select(-c(count, rank)) %>%
   group_by(year_of_birth, gender, ethnicity, childs_first_name) %>%
-  filter(n() > 1) %>% 
+  filter(n() > 1) %>%
   count(childs_first_name)
 
 # Produce a well-structured, reader-friendly table showing the rank in popularity of the name “Olivia” as a female baby name over time; this should have rows for ethnicities and columns for year
-table_olivia = df_baby_names %>% 
-  filter(childs_first_name == "olivia") %>% 
-  select(-c(gender, count)) %>% 
-  distinct() %>% 
+table_olivia = df_baby_names %>%
+  filter(childs_first_name == "olivia") %>%
+  select(-c(gender, count)) %>%
+  distinct() %>%
   pivot_wider(names_from = year_of_birth, values_from = rank)
 
-knitr::kable(table_olivia, 
-             caption = "Popularity of Name Olivia for Females") 
+knitr::kable(table_olivia,
+             caption = "Popularity of name \"Olivia\" for females by ethnicity and year.")
 
 
 
 # Produce a similar table showing the most popular name among male children over time.
-# You need to create a data frame that has rows for ethnicities and columns for years, and each cell contains the most popular boy name for that ethnicity / year. 
+# You need to create a data frame that has rows for ethnicities and columns for years, and each cell contains the most popular boy name for that ethnicity / year.
 
-table_pop_male_names = df_baby_names %>% 
-  filter(gender == "MALE", rank == 1) %>% 
-  select(-c(gender, count)) %>% 
-  distinct() %>% 
+table_pop_male_names = df_baby_names %>%
+  filter(gender == "MALE", rank == 1) %>%
+  select(-c(gender, count)) %>%
+  distinct() %>%
   pivot_wider(names_from = year_of_birth, values_from = childs_first_name)
 
-knitr::kable(table_pop_male_names, 
-             caption = "Popularity of Name Olivia for Females") 
+knitr::kable(table_pop_male_names,
+             caption = "Most popular male name by ethnicity and year.")
 
 
 
 # Finally, for male, white non-hispanic children born in 2016, produce a scatter plot showing the number of children with a name (y axis) against the rank in popularity of that name (x axis)
-ggp_names = df_baby_names %>% 
+ggp_names = df_baby_names %>%
   filter(gender == "MALE",
-         ethnicity == "white non hispanic", 
+         ethnicity == "white non hispanic",
          year_of_birth == 2016)
 
 ggplot(ggp_names, aes(x = rank, y = count)) +
   geom_point() +
-  labs(title = "Count for Baby Names by Popularity", 
+  labs(title = "Count for Baby Names by Popularity",
        subtitle = "Male names in 2016 among white, non-hispanics",
        x = "Popularity rank",
        y = "Number of babies with given name")
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
