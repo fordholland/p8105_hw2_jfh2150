@@ -34,6 +34,9 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 ## Problem 1
 
+
+#### Mr. Trash Wheel data
+
 ```{r}
 
 # read in Mr. Trash Wheel data excluding the header and note column
@@ -57,6 +60,12 @@ df_trash_data = df_trash_data %>%
       as.integer()
   )
 
+```
+
+
+#### Precipitation data
+
+```{r}
 # read in 2017 precipitation data
 df_precipitation_17 = read_excel("Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
                                  sheet = "2017 Precipitation",
@@ -109,8 +118,9 @@ The precipitation data describe the total precipitation in Baltimore per month. 
 
 ## Problem 2
 
-{First, clean the data in pols-month.csv. Use separate() to break up the variable mon into integer variables year, month, and day; replace month number with month name; create a president variable taking values gop and dem, and remove prez_dem and prez_gop; and remove the day variable.}
 
+
+#### Pols-month data
 
 ```{r}
 
@@ -134,6 +144,14 @@ df_pols_month %>%
 df_pols_month = df_pols_month %>%
   select(-c(prez_dem, prez_gop, day))
 
+```
+
+
+The `df_pols_month` dataset describes the political composition of the U.S. government at different points in time. There are values for the numbers of democrats and republicans in each of the houses of Congress and as governors, and indicators for the political affiliation of the president. There are `r nrow(df_pols_month)` per-month observations.
+
+#### S&P data
+
+```{r}
 
 # load and clean snp data
 df_snp = read_csv("Data/snp.csv") %>%
@@ -142,6 +160,14 @@ df_snp = read_csv("Data/snp.csv") %>%
   mutate(month = month.name[month]) %>%
   select(year, month, close)
 
+```
+
+`df_snp` contains `r nrow(df_snp)` observations on the closing values of the Standard & Poor’s stock market index by year and month.
+
+
+#### Unemployment data
+
+```{r}
 
 # load and tidy unemployment data
 df_unemployment = read_csv("Data/unemployment.csv") %>%
@@ -149,6 +175,14 @@ df_unemployment = read_csv("Data/unemployment.csv") %>%
   pivot_longer(-year, names_to = "month", values_to = "unemployment_rate") %>%
   mutate(month = month.name[match(month, month.abb)])
 
+```
+
+The `df_unemployment` dataset contains `r nrow(df_unemployment)` observations of the U.S unemployment rate by year and month.
+
+
+#### Joining the data
+
+```{r}
 
 # join in s&p closing values
 df_pols_month_joined = left_join(df_pols_month, df_snp,
@@ -161,14 +195,6 @@ df_pols_month_joined = left_join(df_pols_month_joined, df_unemployment,
 ```
 
 
-
-
-The `df_pols_month` dataset describes the political composition of the U.S. government at different points in time. There are values for the numbers of democrats and republicans in each of the houses of Congress and as governors, and indicators for the political affiliation of the president. There are `r nrow(df_pols_month)` per-month observations.
-
-`df_snp` contains `r nrow(df_snp)` observations on the closing values of the Standard & Poor’s stock market index by year and month.
-
-The `df_unemployment` dataset contains `r nrow(df_unemployment)` observations of the U.S unemployment rate by year and month.
-
 When joined together, these datasets relate the political party composition of the U.S. government to the S&P index and unemployment rate, which are often used as recession indicators. The joined dataset comprises `r ncol(df_pols_month_joined)` features and `r nrow(df_pols_month_joined)` rows representing years `r df_pols_month_joined %>% summarize(min = min(year))` to `r df_pols_month_joined %>% summarize(max = max(year))`. The key values of `close` for the S&P index and `unemployment_rate` only have data starting in `r df_pols_month_joined %>% filter(!is.na(close)) %>% summarize(min = min(year))` and `r df_pols_month_joined %>% filter(!is.na(unemployment_rate)) %>% summarize(min = min(year))`, respectively.
 
 
@@ -177,7 +203,7 @@ When joined together, these datasets relate the political party composition of t
 ## Problem 3
 
 
-
+#### Baby names data
 ```{r}
 
 
@@ -204,6 +230,11 @@ df_baby_names %>%
   filter(n() > 1) %>%
   count(childs_first_name)
 
+```
+
+
+#### Olivia table
+```{r}
 # Produce a well-structured, reader-friendly table showing the rank in popularity of the name “Olivia” as a female baby name over time; this should have rows for ethnicities and columns for year
 table_olivia = df_baby_names %>%
   filter(childs_first_name == "olivia") %>%
@@ -227,7 +258,12 @@ table_pop_male_names = df_baby_names %>%
 knitr::kable(table_pop_male_names,
              caption = "Most popular male name by ethnicity and year.")
 
+```
 
+
+#### Popular male names
+
+```{r}
 
 # For male, white non-hispanic children born in 2016, produce a scatter plot showing the number of children with a name (y axis) against the rank in popularity of that name (x axis)
 ggp_names = df_baby_names %>%
@@ -235,6 +271,12 @@ ggp_names = df_baby_names %>%
          ethnicity == "white non hispanic",
          year_of_birth == 2016)
 
+```
+
+
+#### Name count and rank
+
+```{r}
 ggplot(ggp_names, aes(x = rank, y = count)) +
   geom_point() +
   labs(title = "Count for Baby Names by Popularity",
