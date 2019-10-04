@@ -243,10 +243,22 @@ table_olivia = df_baby_names %>%
   pivot_wider(names_from = year_of_birth, values_from = rank)
 
 knitr::kable(table_olivia,
+             col.names = c("Ethnicity", 
+                           "Child's first name", 
+                           "2011 rank",
+                           "2012 rank",
+                           "2013 rank",
+                           "2014 rank",
+                           "2015 rank",
+                           "2016 rank"),
              caption = "Popularity of name \"Olivia\" for females by ethnicity and year.")
 
+```
 
 
+#### Popular male names
+
+```{r}
 # Produce a similar table showing the most popular name among male children over time.
 # You need to create a data frame that has rows for ethnicities and columns for years, and each cell contains the most popular boy name for that ethnicity / year.
 table_pop_male_names = df_baby_names %>%
@@ -256,12 +268,20 @@ table_pop_male_names = df_baby_names %>%
   pivot_wider(names_from = year_of_birth, values_from = childs_first_name)
 
 knitr::kable(table_pop_male_names,
+             col.names = c("Ethnicity", 
+                           "Child's first name", 
+                           "2011",
+                           "2012",
+                           "2013",
+                           "2014",
+                           "2015",
+                           "2016"),
              caption = "Most popular male name by ethnicity and year.")
 
 ```
 
 
-#### Popular male names
+#### Name count and rank
 
 ```{r}
 
@@ -271,12 +291,6 @@ ggp_names = df_baby_names %>%
          ethnicity == "white non hispanic",
          year_of_birth == 2016)
 
-```
-
-
-#### Name count and rank
-
-```{r}
 ggplot(ggp_names, aes(x = rank, y = count)) +
   geom_point() +
   labs(title = "Count for Baby Names by Popularity",
