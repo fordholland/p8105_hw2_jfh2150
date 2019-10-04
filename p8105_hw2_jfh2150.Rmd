@@ -269,7 +269,7 @@ table_pop_male_names = df_baby_names %>%
 
 knitr::kable(table_pop_male_names,
              col.names = c("Ethnicity", 
-                           "Child's first name", 
+                           "Popularity rank of name", 
                            "2011",
                            "2012",
                            "2013",
