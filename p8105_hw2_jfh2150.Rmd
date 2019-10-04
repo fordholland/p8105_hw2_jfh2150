@@ -147,7 +147,7 @@ df_pols_month = df_pols_month %>%
 ```
 
 
-The `df_pols_month` dataset describes the political composition of the U.S. government at different points in time. There are values for the numbers of democrats and republicans in each of the houses of Congress and as governors, and indicators for the political affiliation of the president. There are `r nrow(df_pols_month)` per-month observations.
+The `df_pols_month` dataset describes the political composition of the U.S. government at different points in time. There are values for the numbers of democrats and republicans in each of the houses of Congress and as governors, and indicators for the political affiliation of the president. There are `r nrow(df_pols_month)` per-month observations. A key value `president` is derived from indicators for each party, and contains values of "dem" and "gop" representing the president's political affiliation. 
 
 #### S&P data
 
